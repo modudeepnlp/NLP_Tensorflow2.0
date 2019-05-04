@@ -51,14 +51,6 @@ test_data = tf.keras.preprocessing.sequence.pad_sequences(train_data,
                                                         maxlen=MAXLEN)
 
 
-
-# def cnn_layer(x, ):
-#
-# 	cnn_layer = layers.Conv2D(100, (5, EMB_DIM), activation='relu')(x) # filters, kernel size
-# 	max_pool = layers.MaxPooling2D((MAXLEN - 5 + 1, 1))(cnn_layer)
-#
-# 	return max_pool
-
 class SimpleClassifier(tf.keras.Model):
 
 	def __init__(self, max_len, emb_dim, vocab_size):
@@ -70,37 +62,18 @@ class SimpleClassifier(tf.keras.Model):
 		self.VOC_SIZE = vocab_size
 
 		self._embedding = layers.Embedding(self.VOC_SIZE, self.EMB_DIM, input_length=self.MAX_LEN)
-		self._reshape = layers.Reshape((self.MAX_LEN, self.EMB_DIM, 1))
-
-		self._cnn_filter_3 = layers.Conv2D(100, (5, self.EMB_DIM), activation='relu') # filters, kernel size
-		self._max_pool_3 = layers.MaxPooling2D((self.MAX_LEN - 5 + 1, 1))
-
-		self._cnn_filter_4 = layers.Conv2D(100, (4, self.EMB_DIM), activation='relu') # filters, kernel size
-		self._max_pool_4 = layers.MaxPooling2D((self.MAX_LEN - 4 + 1, 1))
-
-		self._cnn_filter_5 = layers.Conv2D(100, (3, self.EMB_DIM), activation='relu') # filters, kernel size
-		self._max_pool_5 = layers.MaxPooling2D((self.MAX_LEN - 3 + 1, 1))
-
-		self._fc_dense = layers.Dense(100, activation='relu')
-		self._dense_out = layers.Dense(1, activation='sigmoid')
+		self._global_pooling = layers.GlobalAveragePooling1D()
+		self._dense_1 = layers.Dense(16, activation='relu')
+		self._dense_fc = layers.Dense(1, activation='sigmoid')
 
 	def call(self, x):
 
 		emb_layer = self._embedding(x)
-		emb_layer = self._reshape(emb_layer)
+		global_pooling = self._global_pooling(emb_layer)
+		dense_1 = self._dense_1(global_pooling)
+		dense_fc = self._dense_fc(dense_1)
 
-		cnn_1 = self._cnn_filter_3(emb_layer)
-		max_1 = self._max_pool_3(cnn_1)
-		cnn_2 = self._cnn_filter_4(emb_layer)
-		max_2 = self._max_pool_4(cnn_2)
-		cnn_3 = self._cnn_filter_5(emb_layer)
-		max_3 = self._max_pool_5(cnn_3)
-
-		concat = layers.concatenate([max_1, max_2, max_3])
-		dense_fc = self._fc_dense(concat)
-		dense_out = self._dense_out(dense_fc)
-
-		return dense_out
+		return dense_fc
 
 classifier = SimpleClassifier(MAXLEN, EMB_DIM, VOC_SIZE)
 
@@ -159,6 +132,7 @@ history = model.fit(
     epochs=30,
     batch_size=512,
     validation_split=0.2)
+
 
 test_loss, test_acc = model.evaluate(test_data)
 
