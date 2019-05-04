@@ -10,7 +10,7 @@ def plot_graphs(history, string):
 	plt.xlabel("Epochs")
 	plt.ylabel(string)
 	plt.legend([string, 'val_'+string])
-	plt.figsave('cnn_classifier.png')
+	plt.savefig('cnn_classifier.png')
 
 # Pad length를 통해 추가로 길이를 맞추어 주자
 MAXLEN = 500
@@ -83,11 +83,11 @@ classifier.compile(loss='binary_crossentropy',
 history = classifier.fit(
     train_data,
     train_labels,
-    epochs=10,
+    epochs=50,
     batch_size=512,
     validation_split=0.2)
 
 test_loss, test_acc = classifier.evaluate(test_data, test_labels)
 
-plot_graphs(history, 'accuracy')
-plot_graphs(history, 'loss')
+# plot_graphs(history, 'accuracy')
+# plot_graphs(history, 'loss')

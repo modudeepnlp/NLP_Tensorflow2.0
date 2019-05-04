@@ -81,7 +81,9 @@ class SimpleClassifier(tf.keras.Model):
 		self._cnn_filter_5 = layers.Conv2D(100, (3, self.EMB_DIM), activation='relu') # filters, kernel size
 		self._max_pool_5 = layers.MaxPooling2D((self.MAX_LEN - 3 + 1, 1))
 
-		self._fc_dense = layers.Dense(100, activation='relu')
+		# self._fc_dense = layers.Dense(100, activation='relu')
+		self._fc_dense = layers.Flatten()
+		self._dropout = layers.Dropout(0.5)
 		self._dense_out = layers.Dense(1, activation='sigmoid')
 
 	def call(self, x):
@@ -98,7 +100,8 @@ class SimpleClassifier(tf.keras.Model):
 
 		concat = layers.concatenate([max_1, max_2, max_3])
 		dense_fc = self._fc_dense(concat)
-		dense_out = self._dense_out(dense_fc)
+		drop_out = self._dropout(dense_fc)
+		dense_out = self._dense_out(drop_out)
 
 		return dense_out
 
@@ -111,7 +114,7 @@ classifier.compile(loss='binary_crossentropy',
 history = classifier.fit(
     train_data,
     train_labels,
-    epochs=10,
+    epochs=50,
     batch_size=512,
     validation_split=0.2)
 
