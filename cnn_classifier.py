@@ -51,6 +51,14 @@ test_data = tf.keras.preprocessing.sequence.pad_sequences(train_data,
                                                         maxlen=MAXLEN)
 
 
+
+# def cnn_layer(x, ):
+#
+# 	cnn_layer = layers.Conv2D(100, (5, EMB_DIM), activation='relu')(x) # filters, kernel size
+# 	max_pool = layers.MaxPooling2D((MAXLEN - 5 + 1, 1))(cnn_layer)
+#
+# 	return max_pool
+
 class SimpleClassifier(tf.keras.Model):
 
 	def __init__(self, max_len, emb_dim, vocab_size):
@@ -62,18 +70,37 @@ class SimpleClassifier(tf.keras.Model):
 		self.VOC_SIZE = vocab_size
 
 		self._embedding = layers.Embedding(self.VOC_SIZE, self.EMB_DIM, input_length=self.MAX_LEN)
-		self._global_pooling = layers.GlobalAveragePooling1D()
-		self._dense_1 = layers.Dense(16, activation='relu')
-		self._dense_fc = layers.Dense(1, activation='sigmoid')
+		self._reshape = layers.Reshape((self.MAX_LEN, self.EMB_DIM, 1))
+
+		self._cnn_filter_3 = layers.Conv2D(100, (5, self.EMB_DIM), activation='relu') # filters, kernel size
+		self._max_pool_3 = layers.MaxPooling2D((self.MAX_LEN - 5 + 1, 1))
+
+		self._cnn_filter_4 = layers.Conv2D(100, (4, self.EMB_DIM), activation='relu') # filters, kernel size
+		self._max_pool_4 = layers.MaxPooling2D((self.MAX_LEN - 4 + 1, 1))
+
+		self._cnn_filter_5 = layers.Conv2D(100, (3, self.EMB_DIM), activation='relu') # filters, kernel size
+		self._max_pool_5 = layers.MaxPooling2D((self.MAX_LEN - 3 + 1, 1))
+
+		self._fc_dense = layers.Dense(100, activation='relu')
+		self._dense_out = layers.Dense(1, activation='sigmoid')
 
 	def call(self, x):
 
 		emb_layer = self._embedding(x)
-		global_pooling = self._global_pooling(emb_layer)
-		dense_1 = self._dense_1(global_pooling)
-		dense_fc = self._dense_fc(dense_1)
+		emb_layer = self._reshape(emb_layer)
 
-		return dense_fc
+		cnn_1 = self._cnn_filter_3(emb_layer)
+		max_1 = self._max_pool_3(cnn_1)
+		cnn_2 = self._cnn_filter_4(emb_layer)
+		max_2 = self._max_pool_4(cnn_2)
+		cnn_3 = self._cnn_filter_5(emb_layer)
+		max_3 = self._max_pool_5(cnn_3)
+
+		concat = layers.concatenate([max_1, max_2, max_3])
+		dense_fc = self._fc_dense(concat)
+		dense_out = self._dense_out(dense_fc)
+
+		return dense_out
 
 classifier = SimpleClassifier(MAXLEN, EMB_DIM, VOC_SIZE)
 
@@ -92,81 +119,3 @@ test_loss, test_acc = classifier.evaluate(test_data, test_labels)
 
 plot_graphs(history, 'accuracy')
 plot_graphs(history, 'loss')
-
-
-seq_input = layers.Input(shape=(MAXLEN,), dtype='int32')
-embed_layer = tf.keras.layers.Embedding(VOC_SIZE, EMB_DIM)(seq_input)
-# <tf.Tensor 'embedding_7/embedding_lookup/Identity_2:0' shape=(None, 20, 128) dtype=float32>
-
-embedded_layer = layers.Reshape((MAXLEN, EMB_DIM, 1))(embed_layer)
-filter_5 = layers.Conv2D(100, (5, EMB_DIM), activation='relu')(embedded_layer) # filters, kernel size
-filter_5 = layers.MaxPooling2D((MAXLEN - 5 + 1, 1))(filter_5)
-
-filter_4 = layers.Conv2D(100, (4, EMB_DIM), activation='relu')(embedded_layer) # filters, kernel size
-filter_4 = layers.MaxPooling2D((MAXLEN - 4 + 1, 1))(filter_4)
-
-filter_3 = layers.Conv2D(100, (3, EMB_DIM), activation='relu')(embedded_layer) # filters, kernel size
-filter_3 = layers.MaxPooling2D((MAXLEN - 3 + 1, 1))(filter_3)
-
-alpha = layers.concatenate([filter_3, filter_4, filter_5])
-alpha = layers.Flatten()(alpha)
-alpha = layers.Dropout(0.5)(alpha)
-
-# preds = layers.Dense(len(), activation='softmax')(alpha)
-preds = layers.Dense(1, activation='sigmoid')(alpha)
-
-model = tf.keras.models.Model(seq_input, preds)
-adadelta = tf.keras.optimizers.Adadelta()
-
-# model.compile(loss='categorical_crossentropy',
-#               optimizer=adadelta,
-#               metrics=['accuracy'])
-
-model.compile(loss='binary_crossentropy',
-              optimizer=adadelta,
-              metrics=['accuracy'])
-
-history = model.fit(
-    train_data,
-    train_labels,
-    epochs=30,
-    batch_size=512,
-    validation_split=0.2)
-
-
-test_loss, test_acc = model.evaluate(test_data)
-
-print('Test Loss: {}'.format(test_loss))
-print('Test Accuracy: {}'.format(test_acc))
-
-# def pad_to_size(vec, size):
-#     zeros = [0] * (size - len(vec))
-#     vec.extend(zeros)
-#     return vec
-#
-# def sample_predict(sentence, pad):
-#     tokenized_sample_pred_text = tokenizer.encode(sample_pred_text)
-#
-#     if pad:
-#         tokenized_sample_pred_text = pad_to_size(tokenized_sample_pred_text, 64)
-#
-#     predictions = model.predict(tf.expand_dims(tokenized_sample_pred_text, 0))
-#
-#     return (predictions)
-#
-# # predict on a sample text without padding.
-#
-# sample_pred_text = ('The movie was cool. The animation and the graphics '
-#                     'were out of this world. I would recommend this movie.')
-# predictions = sample_predict(sample_pred_text, pad=False)
-# print (predictions)
-#
-# # predict on a sample text with padding
-#
-# sample_pred_text = ('The movie was cool. The animation and the graphics '
-#                     'were out of this world. I would recommend this movie.')
-# predictions = sample_predict(sample_pred_text, pad=True)
-# print (predictions)
-#
-# plot_graphs(history, 'accuracy')
-# plot_graphs(history, 'loss')
