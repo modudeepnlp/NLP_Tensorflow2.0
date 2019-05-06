@@ -51,14 +51,6 @@ test_data = tf.keras.preprocessing.sequence.pad_sequences(train_data,
                                                         maxlen=MAXLEN)
 
 
-
-# def cnn_layer(x, ):
-#
-# 	cnn_layer = layers.Conv2D(100, (5, EMB_DIM), activation='relu')(x) # filters, kernel size
-# 	max_pool = layers.MaxPooling2D((MAXLEN - 5 + 1, 1))(cnn_layer)
-#
-# 	return max_pool
-
 class SimpleClassifier(tf.keras.Model):
 
 	def __init__(self, max_len, emb_dim, vocab_size):
@@ -72,16 +64,18 @@ class SimpleClassifier(tf.keras.Model):
 		self._embedding = layers.Embedding(self.VOC_SIZE, self.EMB_DIM, input_length=self.MAX_LEN)
 		self._reshape = layers.Reshape((self.MAX_LEN, self.EMB_DIM, 1))
 
-		self._cnn_filter_3 = layers.Conv2D(100, (5, self.EMB_DIM), activation='relu') # filters, kernel size
-		self._max_pool_3 = layers.MaxPooling2D((self.MAX_LEN - 5 + 1, 1))
+		self._cnn_filter_3 = layers.Conv2D(100, kernel_size=(3, self.EMB_DIM), padding='valid',
+		                                   kernel_initializer='normal', activation='relu') # filters, kernel size
+		self._max_pool_3 = layers.MaxPooling2D((self.MAX_LEN - 3 + 1, 1), strides=(1,1), padding='valid')
 
-		self._cnn_filter_4 = layers.Conv2D(100, (4, self.EMB_DIM), activation='relu') # filters, kernel size
-		self._max_pool_4 = layers.MaxPooling2D((self.MAX_LEN - 4 + 1, 1))
+		self._cnn_filter_4 = layers.Conv2D(100, (4, self.EMB_DIM), padding='valid',
+		                                   kernel_initializer='normal', activation='relu') # filters, kernel size
+		self._max_pool_4 = layers.MaxPooling2D((self.MAX_LEN - 4 + 1, 1), strides=(1,1), padding='valid')
 
-		self._cnn_filter_5 = layers.Conv2D(100, (3, self.EMB_DIM), activation='relu') # filters, kernel size
-		self._max_pool_5 = layers.MaxPooling2D((self.MAX_LEN - 3 + 1, 1))
+		self._cnn_filter_5 = layers.Conv2D(100, (5, self.EMB_DIM), padding='valid',
+		                                   kernel_initializer='normal', activation='relu') # filters, kernel size
+		self._max_pool_5 = layers.MaxPooling2D((self.MAX_LEN - 5 + 1, 1), strides=(1,1), padding='valid')
 
-		# self._fc_dense = layers.Dense(100, activation='relu')
 		self._fc_dense = layers.Flatten()
 		self._dropout = layers.Dropout(0.5)
 		self._dense_out = layers.Dense(1, activation='sigmoid')
@@ -111,12 +105,18 @@ classifier.compile(loss='binary_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
 
+early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                              min_delta=0,
+                              patience=2,
+                              verbose=0, mode='auto')
+
 history = classifier.fit(
     train_data,
     train_labels,
-    epochs=50,
+    epochs=7,
     batch_size=512,
-    validation_split=0.2)
+    validation_split=0.2,
+	callbacks=[early_stopping])
 
 test_loss, test_acc = classifier.evaluate(test_data, test_labels)
 
