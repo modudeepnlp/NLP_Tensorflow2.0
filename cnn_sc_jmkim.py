@@ -4,10 +4,24 @@ from tensorflow.keras import layers
 import numpy as np
 import json
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from datetime import datetime
 from sklearn.model_selection import train_test_split
 from absl import app
 from configs import FLAGS
+
+
+
+def plot_graphs(history, string):
+	plt.plot(history.history[string])
+	plt.plot(history.history['val_'+string])
+	plt.xlabel("Epochs")
+	plt.ylabel(string)
+	plt.legend([string, 'val_'+string])
+	plt.savefig('cnn_classifier.png')
 
 
 def basic():
@@ -47,7 +61,8 @@ class CNN(tf.keras.Model):
     def __init__(self, MAX_LEN, EMB, VOCAB_SIZE):
         super(CNN, self).__init__()
 
-        self._embedding = tf.keras.layers.Embedding(VOCAB_SIZE, EMB, input_length=MAX_LEN)
+        self._embedding = tf.keras.layers.Embedding(VOCAB_SIZE, EMB, input_length=MAX_LEN, trainable=True)
+        self._non_static_embedding = tf.keras.layers.Embedding(VOCAB_SIZE, EMB, input_length=MAX_LEN, trainable=False)
         self._reshape = tf.keras.layers.Reshape((MAX_LEN, EMB, 1))
 
         self._cnn3 = tf.keras.layers.Conv2D(100, kernel_size=(3, EMB), padding='valid',
@@ -75,8 +90,19 @@ class CNN(tf.keras.Model):
         cnn5 = self._cnn5(embedding)
         maxpool5 = self._maxpool5(cnn5)
 
+        non_static_embedding = self._embedding(x)
+        non_static_embedding = self._reshape(non_static_embedding)
+
+        non_static_cnn3 = self._cnn3(non_static_embedding)
+        non_static_maxpool3 = self._maxpool3(non_static_cnn3)
+        non_static_cnn4 = self._cnn4(non_static_embedding)
+        non_static_maxpool4 = self._maxpool4(non_static_cnn4)
+        non_static_cnn5 = self._cnn5(non_static_embedding)
+        non_static_maxpool5 = self._maxpool5(non_static_cnn5)
+
         concat = tf.keras.layers.concatenate([maxpool3, maxpool4, maxpool5])
-        dense = self._fc_dense(concat)
+        non_static_concat = tf.keras.layers.concatenate([non_static_maxpool3, non_static_maxpool4, non_static_maxpool5])
+        dense = self._fc_dense(concat + non_static_concat)
         dropout = self._dropout(dense)
         dense_out = self._dense_out(dropout)
 
@@ -95,11 +121,14 @@ def cnn():
 
     cnn_sc = CNN(FLAGS.length, 128, prepro_configs['vocab_size'])
     cnn_sc.compile(loss="binary_crossentropy", optimizer="adam", metrics=['accuracy'])
-    cnn_sc.fit(train_input_data, train_label_data,
+    history = cnn_sc.fit(train_input_data, train_label_data,
                epochs=FLAGS.epochs,
                batch_size=FLAGS.batch_size,
-               validation_split=0.2,
+               validation_split=0.3,
                verbose=1)
+
+    plot_graphs(history, 'accuracy')
+    plot_graphs(history, 'loss')
 
     test_input_data = np.load(open('./' + FLAGS.input_data + '/' + FLAGS.test_npy, 'rb'))
     test_label_data = np.load(open('./' + FLAGS.input_data + '/' + FLAGS.test_label_npy, 'rb'))
@@ -109,8 +138,8 @@ def cnn():
                                                                     padding='post',
                                                                     maxlen=FLAGS.length)
 
-    results = cnn_sc.evaluate(test_input_data, test_label_data)
-    print(results)
+    test_loss, test_acc = cnn_sc.evaluate(test_input_data, test_label_data)
+    print(test_acc)
 
 
 def main(argv):
