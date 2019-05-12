@@ -39,10 +39,8 @@ def main(argv):
     # training
     for epoch in tqdm(range(epochs)):
         for step, val in tqdm(enumerate(train)):
-            data = processing.token2idex(val)
+            data, label = processing.token2idex(val)
             s = sen_cnn(data)
-            print(s)
-            break
 
 
 if __name__ == '__main__':

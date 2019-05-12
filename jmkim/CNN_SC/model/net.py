@@ -9,6 +9,7 @@ class SenCNN(tf.keras.Model):
         super(SenCNN, self).__init__()
         self._embedding = MultiChannelEmbedding(vocab, max_len, dim)
         self._conv = ConvolutionLayer(FLAGS.length, dim)
+        # maxpooling
 
     def call(self, x):
         feature_map = self._embedding(x)

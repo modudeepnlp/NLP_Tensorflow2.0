@@ -29,33 +29,23 @@ class ConvolutionLayer(tf.keras.Model):
         self._max_len = max_len
         self._dim = dim
 
-        self._tri_gram = layers.Conv2D(100, (3, self._dim), activation='relu', kernel_initializer='he_uniform',
-                                       padding='valid')
-        self._tri_max_pooling = layers.MaxPool2D(self._max_len - 3 + 1, 1)
-        self._tetra_gram = layers.Conv2D(100, (4, self._dim), activation='relu', kernel_initializer='he_uniform',
-                                         padding='valid')
-        self._tetra_max_pooling = layers.MaxPool2D(self._max_len - 4 + 1, 1)
-        self._penta_gram = layers.Conv2D(100, (5, self._dim), activation='relu', kernel_initializer='he_uniform',
-                                         padding='valid')
-        self._penta_max_pooling = layers.MaxPool2D(self._max_len - 5 + 1, 1)
+        self._tri_gram = layers.Conv1D(filters= 100 // 3, activation=tf.nn.relu, kernel_size=3)
+        self._tetra_gram = layers.Conv1D(filters=100 // 4, activation=tf.nn.relu, kernel_size=4)
+        self._penta_gram = layers.Conv1D(filters=100 // 5, activation=tf.nn.relu, kernel_size=5)
 
-        self._flatten = layers.Flatten()
-        self._drop_out = layers.Dropout(0.5)
-        self._dense_out = layers.Dense(FLAGS.classes, activation='sigmoid')
 
     def call(self, x):
         static, non_static = x
-        # 여긴 다시 만들어야 하는 부분
+
         cnn_3 = self._tri_gram(static)
-        max_3 = self._tri_max_pooling(cnn_3)
-        cnn_4 = self._tri_gram(static)
-        max_4 = self._tri_max_pooling(cnn_4)
-        cnn_5 = self._tri_gram(static)
-        max_5 = self._tri_max_pooling(cnn_5)
+        cnn_4 = self._tetra_gram(static)
+        cnn_5 = self._penta_gram(static)
 
-        concat = layers.concatenate([max_3, max_4, max_5])
-        flatten = self._flatten(concat)
-        drop_out = self._dropout(flatten)
-        dense_out = self._dense_out(drop_out)
+        non_cnn_3 = self._tri_gram(non_static)
+        non_cnn_4 = self._tetra_gram(non_static)
+        non_cnn_5 = self._penta_gram(non_static)
 
-        return dense_out
+        tri = cnn_3 + non_cnn_3
+        tetra = cnn_4 + non_cnn_4
+        penta = cnn_5 + non_cnn_5
+        return tri, tetra, penta
