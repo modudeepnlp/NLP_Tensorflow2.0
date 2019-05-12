@@ -1,7 +1,8 @@
 import tensorflow as tf
-from tensorflow.python.keras import layers
+from tensorflow.keras import layers
 
 from gluonnlp import Vocab
+from configs import FLAGS
 
 
 class MultiChannelEmbedding(tf.keras.Model):
@@ -14,18 +15,11 @@ class MultiChannelEmbedding(tf.keras.Model):
         self._embedding = vocab.embedding.idx_to_vec.asnumpy()
         self._static = tf.Variable(name='static', initial_value=self._embedding, trainable=True)
         self._non_static = tf.Variable(name='non_static', initial_value=self._embedding, trainable=False)
-        # ids 값을 어찌 설정해야할까 ?
-        # 보통 iterator로 index가 들어가던데
-        self._static_batch = tf.nn.embedding_lookup(params=self._static, ids=1)
-        self._non_static_batch = tf.nn.embedding_lookup(params=self._non_static, ids=1)
-
 
     def call(self, x):
-        static = self._static(x)
-        non_static = self._non_static(x)
-        static_batch = self._static_batch(static)
-        non_static = self._non_static_batch(non_static)
-        return static_batch, non_static
+        static_batch = tf.nn.embedding_lookup(params=self._static, ids=x)
+        non_static_batch = tf.nn.embedding_lookup(params=self._non_static, ids=x)
+        return static_batch, non_static_batch
 
 
 class ConvolutionLayer(tf.keras.Model):
@@ -47,7 +41,7 @@ class ConvolutionLayer(tf.keras.Model):
 
         self._flatten = layers.Flatten()
         self._drop_out = layers.Dropout(0.5)
-        self._dense_out = layers.Dense(1, activation='sigmoid')
+        self._dense_out = layers.Dense(FLAGS.classes, activation='sigmoid')
 
     def call(self, x):
         static, non_static = x
