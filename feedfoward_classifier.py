@@ -18,6 +18,8 @@ EMB_DIM = 128
 VOC_SIZE = 10000
 use_w2v = True
 
+
+
 # 데이터셋 다운 받기
 imdb = tf.keras.datasets.imdb
 (train_data, train_labels), (test_data, test_labels) = imdb.load_data(num_words=VOC_SIZE)

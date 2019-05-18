@@ -119,8 +119,8 @@ class SAN(tf.keras.Model):
         self._attn = SelfAttention(a, d)
 
         self._top_dense = layers.Dense(units=100, activation='relu')
-        self._last_dense = layers.Dense(units=1, activation='sigmoid')
-        # self._last_dense = layers.Dense(units=2, activation='softmax')
+        # self._last_dense = layers.Dense(units=1, activation='sigmoid')
+        self._last_dense = layers.Dense(units=2, activation='softmax')
         # self._last_dense = layers.Dense(units=2, activation='softmax')
 
     def call(self, x):
@@ -158,7 +158,8 @@ if gpus >= 2:
     # `multi_gpu_model()` is a so quite buggy. it breaks the saved model.
     sent_sim = tf.keras.utils.multi_gpu_model(sent_sim, gpus=gpus)
 
-sent_sim.compile(loss='mean_squared_error', optimizer=tf.keras.optimizers.Adam(), metrics=['accuracy'])
+# sent_sim.compile(loss='mean_squared_error', optimizer=tf.keras.optimizers.Adam(), metrics=['accuracy'])
+sent_sim.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(), metrics=['accuracy'])
 
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                               min_delta=0,

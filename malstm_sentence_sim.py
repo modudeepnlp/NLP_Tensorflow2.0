@@ -11,19 +11,24 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 # from tensorflow.python.keras.models import Model, Sequential
-# from tensorflow.python.keras.layers import Input, Embedding, LSTM, GRU, Conv1D, Conv2D, GlobalMaxPool1D, Dense, Dropout, Bidirectional
+# from tensorflow.python.keras.lslayers import Input, Embedding, LSTM, GRU, Conv1D, Conv2D, GlobalMaxPool1D, Dense, Dropout, Bidirectional
 
 from lib.utils import make_w2v_embeddings
 from lib.utils import split_and_zero_padding
 from lib.utils import ManDist
 
-os.environ["CUDA_VISIBLE_DEVICES"]="6,7" #For TEST
+from pathlib import Path
+
+os.environ["CUDA_VISIBLE_DEVICES"]="7" #For TEST
 
 # File paths
 TRAIN_CSV = './data/quora-question-pairs_eng/train.csv'
-# Load training set
+TEST_CSV = './data/quora-question-pairs_eng/test.csv'
+
+# Load training and test set
 train_df = pd.read_csv(TRAIN_CSV)
 # train_df = train_df[:10000]
+
 
 for q in ['question1', 'question2']:
     train_df[q + '_n'] = train_df[q]
@@ -37,7 +42,7 @@ train_df, embeddings = make_w2v_embeddings(train_df, embedding_dim=EMB_DIM, empt
 
 # Model variables
 gpus = 1
-batch_size = 512 * gpus
+batch_size = 8192 * gpus
 n_epoch = 50
 n_hidden = 50
 
@@ -62,7 +67,6 @@ Y_validation = Y_validation.values
 # Make sure everything is ok
 assert X_train['left'].shape == X_train['right'].shape
 assert len(X_train['left']) == len(Y_train)
-
 
 class MaLSTM(tf.keras.Model):
 
