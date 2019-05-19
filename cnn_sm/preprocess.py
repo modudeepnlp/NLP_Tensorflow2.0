@@ -15,4 +15,4 @@ val.to_csv(proj_dir/'data'/'val.txt', sep='\t', index=False, header=False)
 tst_filepath = proj_dir/'data'/'ratings_test.txt'
 tst = pd.read_csv(tst_filepath, sep='\t').loc[:, ['document', 'label']]
 tst = tst.loc[tst['document'].isnull().apply(lambda x: not x), :]
-tst.to_csv(proj_dir/'data'/'text.txt', sep='\t', index=False, header=False)
+tst.to_csv(proj_dir/'data'/'test.txt', sep='\t', index=False, header=False)
