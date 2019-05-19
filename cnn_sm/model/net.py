@@ -10,7 +10,7 @@ class SenCNN(keras.Model):
         super(SenCNN, self).__init__()
         self._embedding = MultiChannelEmbedding(vocab)
         self._convolution = ConvolutionLayer(300)
-        self._pooling = MaxOverTimePooling()
+        self._pooling = MaxPooling()
         self._dropout = layers.Dropout(0.5)
         self._fc = layers.Dense(units=num_classes)
 
