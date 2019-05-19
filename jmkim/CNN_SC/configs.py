@@ -21,6 +21,6 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('classes', 2, 'classes')
 flags.DEFINE_integer('length', 70, 'max length')
-flags.DEFINE_integer('epochs', 1, 'epochs')
+flags.DEFINE_integer('epochs', 10, 'epochs')
 flags.DEFINE_integer('batch_size', 128, 'batch size')
 flags.DEFINE_float('learning_rate', 1e-3, 'learning rate')
