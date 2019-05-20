@@ -1,7 +1,7 @@
 import tensorflow as tf
 import keras
 from keras import layers
-from model.ops import MultiChannelEmbedding, ConvolutionLayer, MaxPooling
+from cnn_sm.model.ops import MultiChannelEmbedding, ConvolutionLayer, MaxPooling
 from gluonnlp import Vocab
 
 

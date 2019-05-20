@@ -22,7 +22,7 @@ def select_tokenizer(model):
     if model == Okt:
         tokenizer = Okt()
         tokenized = tr['document'].apply(tokenizer.morphs).tolist()
-    if model == LTokenizer:
+    elif model == LTokenizer:
         tokenizer = LTokenizer()
         tokenized = tr['document'].apply(tokenizer.morphs).tolist()
 

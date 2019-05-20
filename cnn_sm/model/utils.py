@@ -1,12 +1,12 @@
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from konlpy.tag import Mecab
+from konlpy.tag import Okt
 from gluonnlp import Vocab
 from typing import Tuple
 
 
 class PreProcessor:
-    def __init__(self, vocab: Vocab, tokenizer: Mecab, pad_idx: int = 0, pad_length: int = 70) -> None:
+    def __init__(self, vocab: Vocab, tokenizer: Okt, pad_idx: int = 0, pad_length: int = 70) -> None:
         '''
 
         :param vocab: gluonnlp.Vocab
@@ -14,10 +14,10 @@ class PreProcessor:
         :param pad_idx: the idx of padding token. Default: 0
         :param pad_length(int): padding length, Default: 70
         '''
-        self._vocab =vocab
+        self._vocab = vocab
         self._tokenizer = tokenizer
         self._pad_idx = pad_idx
-        self._pad_lenghth = pad_length
+        self._pad_length = pad_length
 
     def convert2idx(self, record: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
         data, label = tf.io.decode_csv(record, record_defaults=[[''], [0]], field_delim='\t')

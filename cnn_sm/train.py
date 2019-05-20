@@ -2,11 +2,13 @@ import json
 import tensorflow as tf
 import fire
 import pickle
-from model.net import SenCNN
-from model.utils import PreProcessor
+from cnn_sm.model.net import SenCNN
+from cnn_sm.model.utils import PreProcessor
 from pathlib import Path
-from konlpy.tag import Mecab
+from konlpy.tag import Okt
 from tqdm import tqdm
+import sys
+sys.path.append('..')
 
 
 def create_dataset(filepath, batch_size, shuffle=True, drop_remainder=True):
@@ -17,30 +19,36 @@ def create_dataset(filepath, batch_size, shuffle=True, drop_remainder=True):
     ds = ds.batch(batch_size=batch_size, drop_remainder=drop_remainder)
     return ds
 
-def main(cfgpath):
+def main():
     # parsing config.json
     proj_dir = Path.cwd()
-    params = json.load((proj_dir/cfgpath).open())
+    # params = json.load((proj_dir/cfgpath).open())
 
     # create dataset
-    batch_size = params['training'].get('batch_size')
-    tr_filepath = params['filepath'].get('tr')
-    val_filepath = params['filepath'].get('val')
+    batch_size = 128
+    # batch_size = params['training'].get('batch_size')
+    tr_filepath = "data/train.txt"
+    # tr_filepath = params['filepath'].get('tr')
+    val_filepath = "data/val.txt"
+    # val_filepath = params['filepath'].get('val')
     tr_ds = create_dataset(tr_filepath, batch_size, shuffle=True)
     val_ds = create_dataset(val_filepath, batch_size, shuffle=False) # 평가 데이터는 셔플 ㄴㄴ
 
-    mecab = Mecab()
+    mecab = Okt()
 
     # create pre_processor
-    vocab = pickle.load((proj_dir / params['filepath'].get('vocab')).open(mode='rb'))
+    vocab = pickle.load((proj_dir / 'data/vocab.pkl').open(mode='rb'))
     pre_processor = PreProcessor(vocab=vocab, tokenizer=mecab)
 
     # create model
     model = SenCNN(num_classes=2, vocab=vocab)
 
     # create optimizer & loss_fn
-    epochs = params['training'].get('epochs')
-    learning_rate = params['training'].get('learning_rate')
+    epochs = 10
+    # epochs = params['training'].get('epochs')
+    learning_rate = 1e-3
+    # learning_rate = params['training'].get('learning_rate')
+
     opt = tf.optimizer.Adam(learning_rate=learning_rate)
     loss_fn = tf.losses.SparseCategoricalCrossentropy()
 
@@ -72,6 +80,4 @@ def main(cfgpath):
 
         tqdm.write('epoch : {}, tr_loss : {:.3f}, val_loss = {:.3f}'.format(epoch + 1, tr_loss, val_loss))
 
-
-if __name__ == '__main__':
-    fire.Fire(main)
+main()

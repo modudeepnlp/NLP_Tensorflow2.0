@@ -1,15 +1,16 @@
 import tensorflow as tf
-import tensorflow.keras as keras
 from tensorflow.keras import layers
+import gluonnlp as nlp
 from gluonnlp import Vocab
 from typing import Tuple
 
 
 class MultiChannelEmbedding(layers.Layer):
-    def __init__(self, vocab: Vocab) -> None:
+    def __init__(self, vocab=Vocab):
         super(MultiChannelEmbedding, self).__init__()
-        self._non_static_embedding = tf.Variable(initial_value=vocab.embedding.idx_to_vec.asnumpy(), trainable=True)
-        self._static_embedding = tf.Variable(initial_value=vocab.embedding.idx_to_vec.asnumpy(), trainable=False)
+        self._embedding = nlp.embedding.Word2Vec.idx_to_vec
+        self._non_static_embedding = tf.Variable(initial_value=self._embedding, trainable=True)
+        self._static_embedding = tf.Variable(initial_value=self._embedding, trainable=False)
 
     def call(self, idx: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
         non_static_embedding = tf.nn.embedding_lookup(self._non_static_embedding, idx)
@@ -17,12 +18,12 @@ class MultiChannelEmbedding(layers.Layer):
         return non_static_embedding, static_embedding
 
 
-class ConvolutionLayer(layers.Layer):
+class ConvolutionLayer(tf.keras.Model):
     def __init__(self, filters: int = 300) -> None:
         super(ConvolutionLayer, self).__init__()
-        self._tri_gram_ops = keras.layers.Conv1D(filters=filters // 3, kernel_size=3, activation=tf.nn.relu)
-        self._tetra_gram_ops = keras.layers.Conv1D(filters=filters // 3, kernel_size=4,  activation=tf.nn.relu)
-        self._penta_gram_ops = keras.layers.Conv1D(filters=filters // 3, kernel_size=5, activation=tf.nn.relu)
+        self._tri_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=3, activation=tf.nn.relu)
+        self._tetra_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=4,  activation=tf.nn.relu)
+        self._penta_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=5, activation=tf.nn.relu)
 
     def call(self, x: Tuple[tf.Tensor, tf.Tensor]) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
         non_static_embedding, static_embedding = x

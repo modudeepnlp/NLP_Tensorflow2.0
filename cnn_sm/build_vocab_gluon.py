@@ -3,7 +3,7 @@ import gluonnlp as nlp
 import itertools
 import pickle
 from pathlib import Path
-from konlpy.tag import Mecab
+from konlpy.tag import Okt
 
 # loading dataset
 project_dir = Path.cwd()
@@ -11,7 +11,7 @@ tr_filepath = project_dir/'data'/'train.txt'
 tr = pd.read_csv(tr_filepath, sep='\t').loc[:, ['document', 'label']]
 
 # extracting morph in sentences
-tokenizer = Mecab()
+tokenizer = Okt()
 tokenized = tr['document'].apply(tokenizer.morphs).tolist()
 
 # making the vocab
