@@ -53,7 +53,7 @@ class SmCnn(tf.keras.Model):
         pre_processor = PreProcessor(vocab=vocab, tokenizer=Mecab())
 
         # create model
-        model = SenCNN(num_classes=2, vocab=vocab)
+        model = SmCnn()
 
         # create optimizer & loss_fn
         epochs = self._epochs

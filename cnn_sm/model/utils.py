@@ -23,7 +23,7 @@ class PreProcessor:
         data, label = tf.io.decode_csv(record, record_defaults=[[''], [0]], field_delim='\t')
         data = [self._tokenizer.morphs(sen.numpy().decode('utf-8')) for sen in data]
         data = [[self._vocab.token_to_idx[token] for token in sen] for sen in data]
-        data = pad_sequences(data, maxlen=self._pad_lenghth, value=self._pad_idx,
+        data = pad_sequences(data, maxlen=self._pad_length, value=self._pad_idx,
                              padding='post', truncating='post')
         data = tf.convert_to_tensor(data, dtype=tf.int32)
         label = tf.reshape(label, (record.get_shape()[0], ))

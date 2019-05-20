@@ -5,10 +5,10 @@ from gluonnlp import Vocab
 from typing import Tuple
 
 
-class MultiChannelEmbedding(layers.Layer):
+class MultiChannelEmbedding(tf.keras.Model):
     def __init__(self, vocab=Vocab):
         super(MultiChannelEmbedding, self).__init__()
-        self._embedding = nlp.embedding.Word2Vec.idx_to_vec
+        self._embedding = vocab.embedding.idx_to_vec.asnumpy()
         self._non_static_embedding = tf.Variable(initial_value=self._embedding, trainable=True)
         self._static_embedding = tf.Variable(initial_value=self._embedding, trainable=False)
 
@@ -33,7 +33,7 @@ class ConvolutionLayer(tf.keras.Model):
         return tri_fmap, tetra_fmap, penta_fmap
 
 
-class MaxPooling(layers.Layer):
+class MaxPooling(tf.keras.Model):
     def call(self, x: Tuple[tf.Tensor, tf.Tensor, tf.Tensor]) -> tf.Tensor:
         tri_fmap, tetra_fmap, penta_fmap = x
         fmap = tf.concat([tf.reduce_max(tri_fmap, 1), tf.reduce_max(tetra_fmap, 1), tf.reduce_max(penta_fmap, 1)],

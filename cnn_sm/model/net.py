@@ -1,11 +1,10 @@
 import tensorflow as tf
-import keras
-from keras import layers
+from tensorflow.keras import layers
 from cnn_sm.model.ops import MultiChannelEmbedding, ConvolutionLayer, MaxPooling
 from gluonnlp import Vocab
 
 
-class SenCNN(keras.Model):
+class SenCNN(tf.keras.Model):
     def __init__(self, num_classes: int, vocab: Vocab) -> None:
         super(SenCNN, self).__init__()
         self._embedding = MultiChannelEmbedding(vocab)
