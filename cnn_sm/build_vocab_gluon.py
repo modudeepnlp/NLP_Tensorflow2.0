@@ -8,11 +8,11 @@ from konlpy.tag import Okt
 # loading dataset
 project_dir = Path.cwd()
 tr_filepath = project_dir/'data'/'train.txt'
-tr = pd.read_csv(tr_filepath, sep='\t').loc[:, ['document', 'label']]
+tr = pd.read_csv(tr_filepath, sep='\t', header=None)
 
 # extracting morph in sentences
 tokenizer = Okt()
-tokenized = tr['document'].apply(tokenizer.morphs).tolist()
+tokenized = tr.iloc[:, 0].apply(tokenizer.morphs).tolist()
 
 # making the vocab
 counter = nlp.data.count_tokens(itertools.chain.from_iterable(tokenized))
