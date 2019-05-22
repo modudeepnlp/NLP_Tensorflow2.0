@@ -23,5 +23,5 @@ ptr_embedding = nlp.embedding.create('fasttext', source='wiki.ko')
 vocab.set_embedding(ptr_embedding)
 
 # saving vocab
-with open('./data/vocab.pkl', mode='wb') as io:
+with open('./data/vocab_gluon.pkl', mode='wb') as io:
     pickle.dump(vocab, io)

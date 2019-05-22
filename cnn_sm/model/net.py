@@ -11,11 +11,12 @@ class SenCNN(tf.keras.Model):
         self._convolution = ConvolutionLayer(300)
         self._pooling = MaxPooling()
         self._dropout = layers.Dropout(0.5)
-        self._fc = layers.Dense(units=num_classes)
+        self._fc = layers.Dense(units=num_classes, activation='softmax')
 
     def call(self, x: tf.Tensor) -> tf.Tensor:
         fmap = self._embedding(x)
         fmap = self._convolution(fmap)
         feature = self._pooling(fmap)
+        feature = self._dropout(feature)
         score = self._fc(feature)
         return score
