@@ -43,33 +43,44 @@ def main(argv):
     opt = tf.optimizers.Adam(learning_rate=learning_rate)
     loss_fn = tf.losses.SparseCategoricalCrossentropy()
 
+    # metrics
+    tr_loss_metric = tf.keras.metrics.Mean(name='train_loss')
+    tr_accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
+    val_loss_metric = tf.keras.metrics.Mean(name='validation_loss')
+    val_accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='validation_accuracy')
+
     # training
 
     for epoch in tqdm(range(epochs), desc='epochs'):
         # tr_loss
-        tr_loss = 0
         tf.keras.backend.set_learning_phase(1) # train mode
 
-        for step, mb in tqdm(enumerate(tr_ds), desc='steps'):
+        for _, mb in tqdm(enumerate(tr_ds), desc='steps'):
             x_mb, y_mb = pre_processor.convert2idx(mb)
             with tf.GradientTape() as tape:
                 mb_loss = loss_fn(y_mb, model(x_mb))
             grads = tape.gradient(target=mb_loss, sources=model.trainable_variables)
             opt.apply_gradients(grads_and_vars=zip(grads, model.trainable_variables))
-            tr_loss += mb_loss.numpy()
-        else:
-            tr_loss /= (step + 1)
+
+            tr_loss_metric.update_state(mb_loss)
+            tr_accuracy_metric(y_mb, model(x_mb))
+
+        tr_mean_loss = tr_loss_metric.result()
+        tr_mean_accuracy = tr_accuracy_metric.result()
 
         tf.keras.backend.set_learning_phase(0) # test mode
-        val_loss = 0
-        for step, mb in tqdm(enumerate(val_ds), desc='steps'):
+        for _, mb in tqdm(enumerate(val_ds), desc='steps'):
             x_mb, y_mb = pre_processor.convert2idx(mb)
             mb_loss = loss_fn(y_mb, model(x_mb))
-            val_loss += mb_loss.numpy()
-        else:
-            val_loss /= (step + 1)
 
-        tqdm.write('epoch : {}, tr_loss : {:.3f}, val_loss = {:.3f}'.format(epoch + 1, tr_loss, val_loss))
+            val_loss_metric.update_state(mb_loss)
+            val_accuracy_metric.update_state(y_mb, model(x_mb))
+
+        val_mean_loss = val_loss_metric.result()
+        val_mean_accuracy = val_accuracy_metric.result()
+
+
+        tqdm.write('epoch : {}, tr_accuracy : {:.3f}, tr_loss : {:.3f}, val_accuracy : {:.3f}, val_loss : {:.3f}'.format(epoch + 1, tr_mean_accuracy, tr_mean_loss, val_mean_accuracy, val_mean_loss))
 
 if __name__ == "__main__":
     app.run(main)

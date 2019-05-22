@@ -10,7 +10,7 @@ class PreProcessor:
         '''
 
         :param vocab: gluonnlp.Vocab
-        :param tokenizer: Mecab
+        :param tokenizer: Okt
         :param pad_idx: the idx of padding token. Default: 0
         :param pad_length(int): padding length, Default: 70
         '''

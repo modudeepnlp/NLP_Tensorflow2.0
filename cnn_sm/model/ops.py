@@ -21,9 +21,9 @@ class MultiChannelEmbedding(tf.keras.Model):
 class ConvolutionLayer(tf.keras.Model):
     def __init__(self, filters: int = 300) -> None:
         super(ConvolutionLayer, self).__init__()
-        self._tri_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=3, activation=tf.nn.relu)
-        self._tetra_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=4,  activation=tf.nn.relu)
-        self._penta_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=5, activation=tf.nn.relu)
+        self._tri_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=3, activation='relu')
+        self._tetra_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=4,  activation='relu')
+        self._penta_gram_ops = tf.keras.layers.Conv1D(filters=filters // 3, kernel_size=5, activation='relu')
 
     def call(self, x: Tuple[tf.Tensor, tf.Tensor]) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
         non_static_embedding, static_embedding = x
