@@ -6,15 +6,11 @@ from configs import FLAGS
 
 
 class MultiChannelEmbedding(tf.keras.layers.Layer):
-    def __init__(self, vocab, max_len, dim):
+    def __init__(self, vocab):
         super(MultiChannelEmbedding, self).__init__()
-
-        self._vocab_len = len(vocab)
-        self._max_len = max_len
-        self._dim = dim
-        self._embedding = vocab.embedding.idx_to_vec.asnumpy()
-        self._static = tf.Variable(name='static', initial_value=self._embedding, trainable=False)
-        self._non_static = tf.Variable(name='non_static', initial_value=self._embedding, trainable=True)
+        self._static = tf.Variable(name='static', initial_value=vocab.embedding.idx_to_vec.asnumpy(), trainable=False)
+        self._non_static = tf.Variable(name='non_static', initial_value=vocab.embedding.idx_to_vec.asnumpy(),
+                                       trainable=True)
 
     def call(self, x):
         static_batch = tf.nn.embedding_lookup(params=self._static, ids=x)
@@ -23,17 +19,13 @@ class MultiChannelEmbedding(tf.keras.layers.Layer):
 
 
 class ConvolutionLayer(tf.keras.layers.Layer):
-    def __init__(self, max_len, dim):
+    def __init__(self, filter):
         super(ConvolutionLayer, self).__init__()
 
-        self._max_len = max_len
-        self._dim = dim
-
         # Conv1D, Conv2D
-        self._tri_gram = layers.Conv1D(filters= 100 // 3, activation=tf.nn.relu, kernel_size=3)
-        self._tetra_gram = layers.Conv1D(filters=100 // 3, activation=tf.nn.relu, kernel_size=4)
-        self._penta_gram = layers.Conv1D(filters=100 // 3, activation=tf.nn.relu, kernel_size=5)
-
+        self._tri_gram = layers.Conv1D(filters=filter // 3, activation=tf.nn.relu, kernel_size=3)
+        self._tetra_gram = layers.Conv1D(filters=filter // 3, activation=tf.nn.relu, kernel_size=4)
+        self._penta_gram = layers.Conv1D(filters=filter // 3, activation=tf.nn.relu, kernel_size=5)
 
     def call(self, x):
         static, non_static = x
@@ -51,9 +43,10 @@ class ConvolutionLayer(tf.keras.layers.Layer):
         penta = cnn_5 + non_cnn_5
         return tri, tetra, penta
 
+
 class MaxPooling(tf.keras.layers.Layer):
     def call(self, x):
         tri, tetra, penta = x
         # 여기 좀 해석할 것.
-        concat = tf.concat([tf.reduce_max(tri, 1), tf.reduce_max(tetra, 1), tf.reduce_max(penta,1)], axis=-1)
+        concat = tf.concat([tf.reduce_max(tri, 1), tf.reduce_max(tetra, 1), tf.reduce_max(penta, 1)], axis=-1)
         return concat
