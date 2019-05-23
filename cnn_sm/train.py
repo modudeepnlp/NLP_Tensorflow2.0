@@ -19,7 +19,6 @@ def create_dataset(filepath, batch_size, shuffle=True, drop_remainder=True):
     return ds
 
 def main(argv):
-    # parsing config.json
     tr_filepath = Path.cwd()/'data'/'train.txt'
     val_filepath = Path.cwd()/'data'/'val.txt'
 
