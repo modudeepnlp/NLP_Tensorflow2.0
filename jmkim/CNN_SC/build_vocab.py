@@ -7,7 +7,7 @@ from pathlib import Path
 from konlpy.tag import Mecab
 
 #train path
-train_path = Path.cwd() / 'NLP_Tensorflow2' / 'nsmc-master' / 'ratings_train.txt'
+train_path = Path.cwd() / 'nsmc-master' / 'ratings_train.txt'
 # train data를 tab으로 구별 document, label 컬럼으로 불러옴
 tr = pd.read_csv(train_path, sep='\t').loc[:, ['document', 'label']]
 # Mecab 정의
@@ -28,5 +28,5 @@ embedding = nlp.embedding.create('fasttext', source='wiki.ko')
 vocab.set_embedding(embedding)
 
 # vocab.pkl 저장
-with open(Path.cwd() / 'NLP_Tensorflow2' / 'CNN_SC/new/data_in/vocab.pkl', mode='wb') as io:
+with open(Path.cwd() / 'data_in/vocab.pkl', mode='wb') as io:
     pickle.dump(vocab, io)

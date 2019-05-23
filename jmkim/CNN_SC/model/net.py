@@ -5,10 +5,10 @@ from configs import FLAGS
 
 
 class SenCNN(tf.keras.Model):
-    def __init__(self, vocab, max_len, dim, classes):
+    def __init__(self, vocab, classes):
         super(SenCNN, self).__init__()
-        self._embedding = MultiChannelEmbedding(vocab, max_len, dim)
-        self._conv = ConvolutionLayer(FLAGS.length, dim)
+        self._embedding = MultiChannelEmbedding(vocab)
+        self._conv = ConvolutionLayer(300)
         # maxpooling
         self._maxpooling = MaxPooling()
 
