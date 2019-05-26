@@ -4,14 +4,14 @@ import pandas as pd
 import gluonnlp as nlp
 
 from pathlib import Path
-from konlpy.tag import Mecab
+from mecab import MeCab
 
 #train path
 train_path = Path.cwd() / 'nsmc-master' / 'ratings_train.txt'
 # train data를 tab으로 구별 document, label 컬럼으로 불러옴
 tr = pd.read_csv(train_path, sep='\t').loc[:, ['document', 'label']]
 # Mecab 정의
-tokenizer = Mecab()
+tokenizer = MeCab()
 # document 열의 데이터를 Mecab의 형태소로 나눈 것들을 list로 변환
 tokenized = tr['document'].apply(lambda elm: tokenizer.morphs(str(elm))).tolist()
 # tokenized 에서 각 단어의 count 저장

@@ -13,7 +13,7 @@ class SenCNN(tf.keras.Model):
         self._maxpooling = MaxPooling()
 
         self._dropout = tf.keras.layers.Dropout(.5)
-        self._fc = tf.keras.layers.Dense(units=classes)
+        self._fc = tf.keras.layers.Dense(units=classes,  activation='softmax')
 
     def call(self, x):
         feature_map = self._embedding(x)
