@@ -3,23 +3,30 @@ import tensorflow as tf
 import pickle
 import pandas as pd
 
-from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 # from model.data import Corpus
 # from konlpy.tag import Mecab
+from model.net import CNN, MLP
 from pathlib import Path
 import json
 import numpy as np
 from tqdm import tqdm
 import time
 
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"  # For TEST
 
+##Path
 proj_dir = Path.cwd()
 params = json.load((proj_dir / 'params' / 'config.json').open())
+vocab_path = params['filepath'].get('vocab')
+
 tr_data_path = params['filepath'].get('pre_tr')
 tr_label_path = params['filepath'].get('pre_tr_label')
 tr_configs_path = params['filepath'].get('pre_data_configs')
+
+test_data_path = params['filepath'].get('pre_test')
+test_label_path = params['filepath'].get('pre_test_label')
 
 ### Hyperparams ###
 batch_size = params['training'].get('batch_size')
@@ -34,66 +41,50 @@ tr_label = np.load(open(tr_label_path, 'rb'))
 tr_configs = json.load(open(tr_configs_path, encoding='utf-8'))
 vocab_size = tr_configs['vocab_size'] + 1
 
+test_data = np.load(open(test_data_path, 'rb'))
+test_label = np.load(open(test_label_path, 'rb'))
+
+with open(vocab_path, mode='rb') as io:
+	vocab = pickle.load(io)
+
+tr_data, val_data, tr_label, val_label = train_test_split(tr_data, tr_label, test_size=0.2, random_state=777)
+
 tr_dataset = tf.data.Dataset.from_tensor_slices((tr_data, tr_label)).shuffle(len(tr_data))
 tr_dataset = tr_dataset.batch(batch_size, drop_remainder=True)
+val_dataset = tf.data.Dataset.from_tensor_slices((val_data, val_label)).shuffle(len(val_data))
+val_dataset = tr_dataset.batch(batch_size, drop_remainder=True)
 
-class SimpleClassifier(tf.keras.Model):
+test_dataset = tf.data.Dataset.from_tensor_slices((test_data, test_label)).batch(batch_size)
 
-	def __init__(self, max_len, emb_dim, vocab_size):
+# classifier = MLP(max_len, emb_dim, vocab_size)
+classifier = CNN(max_len, emb_dim, vocab_size)
 
-		super(SimpleClassifier, self).__init__()
+# classifier.compile(loss='binary_crossentropy',
+#               optimizer='adam',
+#               metrics=['accuracy'])
+#
+# early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+#                               min_delta=0,
+#                               patience=3,
+#                               verbose=0, mode='auto')
+#
+# history = classifier.fit(
+# 	tr_dataset,
+#     epochs=epochs,
+# 	validation_data = (test_data, test_label),
+# 	callbacks=[early_stopping])
+#
+# test_loss, test_acc = classifier.evaluate(test_dataset)
 
-		self.MAX_LEN = max_len
-		self.EMB_DIM = emb_dim
-		self.VOC_SIZE = vocab_size
-
-		self._embedding = layers.Embedding(self.VOC_SIZE, self.EMB_DIM, input_length=self.MAX_LEN)
-		self._reshape = layers.Reshape((self.MAX_LEN, self.EMB_DIM, 1))
-
-		self._cnn_filter_3 = layers.Conv2D(100, kernel_size=(3, self.EMB_DIM), padding='valid',
-		                                   kernel_initializer='normal', activation='relu') # filters, kernel size
-		self._max_pool_3 = layers.MaxPooling2D((self.MAX_LEN - 3 + 1, 1), strides=(1,1), padding='valid')
-
-		self._cnn_filter_4 = layers.Conv2D(100, (4, self.EMB_DIM), padding='valid',
-		                                   kernel_initializer='normal', activation='relu') # filters, kernel size
-		self._max_pool_4 = layers.MaxPooling2D((self.MAX_LEN - 4 + 1, 1), strides=(1,1), padding='valid')
-
-		self._cnn_filter_5 = layers.Conv2D(100, (5, self.EMB_DIM), padding='valid',
-		                                   kernel_initializer='normal', activation='relu') # filters, kernel size
-		self._max_pool_5 = layers.MaxPooling2D((self.MAX_LEN - 5 + 1, 1), strides=(1,1), padding='valid')
-
-		self._fc_dense = layers.Flatten()
-		self._dropout = layers.Dropout(0.5)
-		self._dense_out = layers.Dense(1, activation='sigmoid')
-		# self._dense_out = layers.Dense(2, activation='softmax')
-
-	def call(self, x):
-
-		emb_layer = self._embedding(x)
-		emb_layer = self._reshape(emb_layer)
-
-		# print(emb_layer.shape)
-		# print(emb_layer)
-
-		cnn_1 = self._cnn_filter_3(emb_layer)
-		max_1 = self._max_pool_3(cnn_1)
-		cnn_2 = self._cnn_filter_4(emb_layer)
-		max_2 = self._max_pool_4(cnn_2)
-		cnn_3 = self._cnn_filter_5(emb_layer)
-		max_3 = self._max_pool_5(cnn_3)
-
-		# print(max_1, max_2, max_3)
-
-		concat = layers.concatenate([max_1, max_2, max_3])
-		dense_fc = self._fc_dense(concat)
-		drop_out = self._dropout(dense_fc)
-		dense_out = self._dense_out(drop_out)
-
-		return dense_out
-
-classifier = SimpleClassifier(max_len, emb_dim, vocab_size)
 opt = tf.optimizers.Adam(learning_rate = lr)
-loss_fn = tf.keras.metrics.binary_crossentropy
+# loss_fn = tf.keras.metrics.binary_crossentropy
+loss_fn = tf.losses.SparseCategoricalCrossentropy()
+
+# metrics
+tr_loss_metric = tf.keras.metrics.Mean(name='train_loss')
+tr_accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
+val_loss_metric = tf.keras.metrics.Mean(name='validation_loss')
+val_accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='validation_accuracy')
 
 for epoch in tqdm(range(epochs), desc='epochs'):
 
@@ -106,20 +97,34 @@ for epoch in tqdm(range(epochs), desc='epochs'):
 		x_mb, y_mb = mb
 
 		with tf.GradientTape() as tape:
-			mb_loss = tf.reduce_mean(loss_fn(y_mb, classifier(x_mb)))
+			mb_loss = loss_fn(y_mb, classifier(x_mb))
 		grads = tape.gradient(target=mb_loss, sources=classifier.trainable_variables)
 		opt.apply_gradients(grads_and_vars=zip(grads, classifier.trainable_variables))
 
-		# tr_loss += mb_loss.numpy()
+		tr_loss_metric.update_state(mb_loss)
+		tr_accuracy_metric(y_mb, classifier(x_mb))
 
 		if step % 100 == 0:
-			template = 'Epoch {} Batch {} Loss {:.4f} Time {:.4f}'
-			print(template.format(epoch + 1, step, mb_loss, (time.time() - start)))
+			tr_mean_loss = tr_loss_metric.result()
+			tr_mean_accuracy = tr_accuracy_metric.result()
 
-	else:
-		tr_loss /= (step + 1)
-		print(tr_loss)
+			template = 'Epoch {} Batch {} Loss {:.4f} Acc {:.4f} Time {:.4f}'
+			print(template.format(epoch + 1, step, tr_mean_loss, tr_mean_accuracy, (time.time() - start)))
 
-	# tqdm.write('epoch : {}, tr_loss : {:.3f}, val_loss : {:.3f}'.format(epoch + 1, tr_loss))
+		# tf.keras.backend.set_learning_phase(0)
+		#
+		# for _, mb in tqdm(enumerate(val_dataset), desc='steps'):
+		# 	x_mb, y_mb = mb
+		# 	mb_loss = loss_fn(y_mb, classifier(x_mb))
+		# 	val_loss_metric.update_state(mb_loss)
+		# 	val_accuracy_metric.update_state(y_mb, classifier(x_mb))
+		#
+		# val_mean_loss = val_loss_metric.result()
+		# val_mean_accuracy = val_accuracy_metric.result()
+		#
+		# val_template = 'Loss {:.4f}, Acc {:.4f}'
+		# print(val_template.format(val_mean_loss, val_mean_accuracy))
+
+		# tqdm.write('epoch : {}, tr_loss : {:.3f}, val_loss : {:.3f}'.format(epoch + 1, tr_loss))
 
 

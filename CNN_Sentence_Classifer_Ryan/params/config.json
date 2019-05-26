@@ -1,0 +1,19 @@
+{
+  "filepath": {"tr": "data/ratings_train.txt",
+               "test": "data/ratings_test.txt",
+               "tst": "data/naver_movie_corpus_kr/test.txt",
+              "pre_tr": "data/nsmc_train_input.npy",
+              "pre_tr_label": "data/nsmc_train_label.npy",
+              "pre_test": "data/nsmc_test_input.npy",
+              "pre_test_label": "data/nsmc_test_label.npy",
+              "pre_data_configs": "data/data_configs.json",
+               "vocab": "data/naver_movie_vocab.pkl",
+               "ckpt": "checkpoint/ckpt.tar"},
+  "model": {"num_classes":  2},
+  "padder": {"length" : 15},
+  "training": {"epochs": 50,
+              "emb_dim": 128,
+               "batch_size": 1024,
+               "learning_rate": 1e-3
+          }
+}
