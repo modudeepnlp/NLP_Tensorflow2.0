@@ -107,4 +107,8 @@ sh/
 OLD/
 data/
 
+# Pycharm project settings
 .idea
+
+# Tensorboard
+events.out.tfevents.*
