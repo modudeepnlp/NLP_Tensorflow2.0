@@ -32,19 +32,31 @@ def main(argv):
     max_length = FLAGS.length
     epochs = FLAGS.epochs
     learning_rate = FLAGS.learning_rate
+    global_step = 1000
 
     # create model
     sen_cnn = SenCNN(vocab=vocab, classes=classes)
 
     # create optimizer & loss_fn
     opt = tf.optimizers.Adam(learning_rate=learning_rate)
-    #opt = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
-    loss_fn = tf.losses.SparseCategoricalCrossentropy()
+    loss_fn = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
 
     train_loss_metric = tf.keras.metrics.Mean(name='train_loss')
     train_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
     val_loss_metric = tf.keras.metrics.Mean(name='val_loss')
     val_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='val_accuracy')
+
+    train_summary_writer = tf.summary.create_file_writer('./data_out/summaries/train')
+    eval_summary_writer = tf.summary.create_file_writer('./data_out/summaries/eval')
+
+    ckpt = tf.train.Checkpoint(step=tf.Variable(1), optimizer=opt, net=sen_cnn)
+    manager = tf.train.CheckpointManager(ckpt, './data_out/tf_ckpts', max_to_keep=3)
+    ckpt.restore(manager.latest_checkpoint)
+
+    if manager.latest_checkpoint:
+        print("Restored from {}".format(manager.latest_checkpoint))
+    else:
+        print("Initializing from scratch.")
 
     # training
     for epoch in tqdm(range(epochs), desc='epochs'):
@@ -56,42 +68,44 @@ def main(argv):
         tf.keras.backend.set_learning_phase(1)
 
         tr_loss = 0
-        for step, val in tqdm(enumerate(train), desc='steps'):
-            data, label = processing.token2idex(val)
-            with tf.GradientTape() as tape:
-                logits = sen_cnn(data)
-                train_loss = loss_fn(label, logits)
-            grads = tape.gradient(target=train_loss, sources=sen_cnn.trainable_variables)
-            opt.apply_gradients(grads_and_vars=zip(grads, sen_cnn.trainable_variables))
-            # tr_loss += pred_loss.numpy()
-            train_loss_metric.update_state(train_loss)
-            train_acc_metric.update_state(label, logits)
+        with train_summary_writer.as_default():
+            for step, val in tqdm(enumerate(train), desc='steps'):
+                data, label = processing.token2idex(val)
+                with tf.GradientTape() as tape:
+                    logits = sen_cnn(data)
+                    train_loss = loss_fn(label, logits)
+                ckpt.step.assign_add(1)
+                grads = tape.gradient(target=train_loss, sources=sen_cnn.trainable_variables)
+                opt.apply_gradients(grads_and_vars=zip(grads, sen_cnn.trainable_variables))
+                # tr_loss += pred_loss.numpy()
+
+                train_loss_metric.update_state(train_loss)
+                train_acc_metric.update_state(label, logits)
+
+                if tf.equal(opt.iterations % global_step, 0):
+                    tf.summary.scalar('loss', train_loss_metric.result(), step=opt.iterations)
 
         # else:
         # tr_loss /= (step + 1)
         # print("t_loss {}".format(tr_loss))
         tr_loss = train_loss_metric.result()
+        save_path = manager.save()
+        print(save_path)
 
         tf.keras.backend.set_learning_phase(0)
 
         val_loss = 0
-        for step, val in tqdm(enumerate(eval), desc='steps'):
-            data, label = processing.token2idex(val)
-            logits = sen_cnn(data)
-            val_loss = loss_fn(label, logits)
-            # val_loss += mb_loss.numpy()
-            val_loss_metric.update_state(val_loss)
-            val_acc_metric.update_state(label, logits)
-        # else:
-        #     val_loss /= (step + 1)
-        #     print("v_loss {}".format(val_loss))
+        with eval_summary_writer.as_default():
+            for step, val in tqdm(enumerate(eval), desc='steps'):
+                data, label = processing.token2idex(val)
+                logits = sen_cnn(data)
+                val_loss = loss_fn(label, logits)
+                # val_loss += mb_loss.numpy()
+                val_loss_metric.update_state(val_loss)
+                val_acc_metric.update_state(label, logits)
+                tf.summary.scalar('loss', val_loss_metric.result(), step=step)
 
         val_loss = val_loss_metric.result()
-
-        print("tr_acc {:.3f}%".format(train_acc_metric.result() * 100))
-        print("tf_loss {:.3f}".format(train_loss_metric.result()))
-        print("val_acc {:.3f}%".format(val_acc_metric.result() * 100))
-        print("val_loss {:.3f}".format(val_loss_metric.result()))
 
         tqdm.write(
             'epoch : {}, tr_acc : {:.3f}%, tr_loss : {:.3f}, val_acc : {:.3f}%, val_loss : {:.3f}'.format(epoch + 1,
