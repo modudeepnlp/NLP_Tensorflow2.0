@@ -81,5 +81,10 @@ def main(argv):
 
         tqdm.write('epoch : {}, tr_accuracy : {:.3f}, tr_loss : {:.3f}, val_accuracy : {:.3f}, val_loss : {:.3f}'.format(epoch + 1, tr_mean_accuracy, tr_mean_loss, val_mean_accuracy, val_mean_loss))
 
+    ckpt_path = Path.cwd() / 'checkpoint/ckpt'
+    ckpt = tf.train.Checkpoint(model=model)
+    ckpt.save(ckpt_path)
+
+
 if __name__ == "__main__":
     app.run(main)
