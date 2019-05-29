@@ -1,9 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from gluonnlp import Vocab
-from configs import FLAGS
-
 
 class MultiChannelEmbedding(tf.keras.layers.Layer):
     def __init__(self, vocab):

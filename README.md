@@ -10,8 +10,9 @@ Most of information is from [NLP paper implementation with PyTorch](https://gith
 
 |                  | Train ACC (120,000) | Validation ACC (30,000) | Test ACC (50,000) |
 | :--------------- | :-------: | :------------: | :------: |
-| Baseline (Feed Forward)         |  -  |     -     |  -  |
+| Baseline (Feed Forward)     |  92.33%  |   -   | 81.29%  |
 | SenCNN           |  92.22%  |     86.81%     |  86.48%  |
+| SenCNN(Ryan)     |  92.53%  |     -     |  82.99%  |
 | CharCNN          | - | - | - |
 | ConvRec          | - | - | - |
 | VDCNN            | - | - | - |
