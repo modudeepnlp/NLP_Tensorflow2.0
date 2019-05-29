@@ -40,7 +40,7 @@ def main(argv):
     learning_rate = 1e-3
 
     opt = tf.optimizers.Adam(learning_rate=learning_rate)
-    loss_fn = tf.losses.SparseCategoricalCrossentropy()
+    loss_fn = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
 
     # metrics
     tr_loss_metric = tf.keras.metrics.Mean(name='train_loss')
