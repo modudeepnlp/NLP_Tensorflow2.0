@@ -6,7 +6,7 @@
 |                  | Train ACC (120,000) | Validation ACC (30,000) | Test ACC (50,000) |
 | :--------------- | :-------: | :------------: | :------: |
 | Baseline (Feed Forward)         |  -  |     -     |  -  |
-| SenCNN           |  90.8%  |     85.2%     |  %  |
+| SenCNN           |  96.69%  |     84.98%     |  84.42%  |
 | CharCNN          | - | - | - |
 | ConvRec          | - | - | - |
 | VDCNN            | - | - | - |
