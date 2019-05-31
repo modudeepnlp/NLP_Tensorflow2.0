@@ -27,7 +27,6 @@ def main(argv):
 
     tr_ds = create_dataset(str(tr_filepath), 128, shuffle=True)
     val_ds = create_dataset(str(val_filepath), 128, shuffle=False)  # 평가 데이터는 셔플 ㄴㄴ
-    # params = json.load((proj_dir/cfgpath).open())
 
     tokenized = Okt()
     pre_processor = PreProcessor(vocab=vocab, tokenizer=tokenized)
