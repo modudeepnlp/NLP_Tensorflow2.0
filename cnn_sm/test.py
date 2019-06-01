@@ -36,16 +36,16 @@ def get_accuracy(model, dataset, preprocess_fn):
 
 def main(cfgpath):
     proj_dir = Path.cwd()
-    tr_filepath = Path.cwd() / 'data' / 'train.txt'
-    val_filepath = Path.cwd() / 'data' / 'val.txt'
+    # tr_filepath = Path.cwd() / 'data' / 'train.txt'
+    # val_filepath = Path.cwd() / 'data' / 'val.txt'
     test_filepath = Path.cwd() / 'data' / 'test.txt'
 
     with open(Path.cwd() / 'data/vocab.pkl', mode='rb') as f:
         vocab = pickle.load(f)
 
     # create dataset
-    tr_ds = create_dataset(str(tr_filepath), 128, False, False)
-    val_ds = create_dataset(str(val_filepath), 128, False, False)
+    # tr_ds = create_dataset(str(tr_filepath), 128, False, False)
+    # val_ds = create_dataset(str(val_filepath), 128, False, False)
     test_ds = create_dataset(str(test_filepath), 128, False, False)
 
 
@@ -58,11 +58,11 @@ def main(cfgpath):
     ckpt.restore(save_path=tf.train.latest_checkpoint(proj_dir/'checkpoint'))
 
     # evaluation
-    tr_acc = get_accuracy(model, tr_ds, pre_processor.convert2idx)
-    val_acc = get_accuracy(model, val_ds, pre_processor.convert2idx)
+    # tr_acc = get_accuracy(model, tr_ds, pre_processor.convert2idx)
+    # val_acc = get_accuracy(model, val_ds, pre_processor.convert2idx)
     test_acc = get_accuracy(model, test_ds, pre_processor.convert2idx)
     
-    print('tr_acc: {:.2%}, val_acc : {:.2%}, tst_acc: {:.2%}'.format(tr_acc, val_acc, test_acc))
+    print('test_acc: {:.2%}'.format(test_acc))
 
 
 if __name__ == "__main__":
