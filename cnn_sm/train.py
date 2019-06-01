@@ -1,12 +1,12 @@
 import tensorflow as tf
 import pickle
-from cnn_sm.model.net import SenCNN
-from cnn_sm.model.utils import PreProcessor
+from model.net import SenCNN
+from model.utils import PreProcessor
 from pathlib import Path
 from konlpy.tag import Okt
 from tqdm import tqdm
-from absl import app
 import sys
+import fire
 sys.path.append('..')
 
 
@@ -18,7 +18,7 @@ def create_dataset(filepath, batch_size, shuffle=True, drop_remainder=True):
     ds = ds.batch(batch_size=batch_size, drop_remainder=drop_remainder)
     return ds
 
-def main(argv):
+def main():
     tr_filepath = Path.cwd()/'data'/'train.txt'
     val_filepath = Path.cwd()/'data'/'val.txt'
 
@@ -86,4 +86,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    app.run(main)
+    #app.run(main)
+    fire.Fire(main)

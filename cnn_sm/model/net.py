@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers
-from cnn_sm.model.ops import MultiChannelEmbedding, ConvolutionLayer, MaxPooling
+from model.ops import MultiChannelEmbedding, ConvolutionLayer, MaxPooling
 from gluonnlp import Vocab
 
 
