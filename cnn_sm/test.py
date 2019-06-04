@@ -1,5 +1,6 @@
 import tensorflow as tf
 import pickle
+import fire
 from cnn_sm.model.net import SenCNN
 from cnn_sm.model.utils import PreProcessor
 from pathlib import Path
@@ -24,7 +25,9 @@ def get_accuracy(model, dataset, preprocess_fn):
         tf.keras.backend.set_learning_phase(0)
 
     for step, mb in tqdm(enumerate(dataset), desc='steps'):
-        x_mb, y_mb = preprocess_fn(mb)
+        x_mb, y_mb = preprocess_fn.convert2idx(mb)
+        x_mb = preprocess_fn.pad_sequences(x_mb, 70)
+        x_mb, y_mb = preprocess_fn.convert_to_tensor(x_mb, y_mb)
         score_mb = model(x_mb)
 
         accuracy_metric.update_state(y_mb, score_mb)
@@ -34,7 +37,7 @@ def get_accuracy(model, dataset, preprocess_fn):
     return mean_accuracy
 
 
-def main(cfgpath):
+def main():
     proj_dir = Path.cwd()
     # tr_filepath = Path.cwd() / 'data' / 'train.txt'
     # val_filepath = Path.cwd() / 'data' / 'val.txt'
@@ -60,10 +63,10 @@ def main(cfgpath):
     # evaluation
     # tr_acc = get_accuracy(model, tr_ds, pre_processor.convert2idx)
     # val_acc = get_accuracy(model, val_ds, pre_processor.convert2idx)
-    test_acc = get_accuracy(model, test_ds, pre_processor.convert2idx)
+    test_acc = get_accuracy(model, test_ds, pre_processor)
     
     print('test_acc: {:.2%}'.format(test_acc))
 
 
 if __name__ == "__main__":
-    app.run(main)
+    fire.Fire(main)

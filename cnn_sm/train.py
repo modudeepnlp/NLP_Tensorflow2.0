@@ -55,6 +55,9 @@ def main():
 
         for _, mb in tqdm(enumerate(tr_ds), desc='steps'):
             x_mb, y_mb = pre_processor.convert2idx(mb)
+            x_mb = pre_processor.pad_sequences(x_mb, 70)
+            x_mb, y_mb = pre_processor.convert_to_tensor(x_mb, y_mb)
+
             with tf.GradientTape() as tape:
                 mb_loss = loss_fn(y_mb, model(x_mb))
             grads = tape.gradient(target=mb_loss, sources=model.trainable_variables)
@@ -69,6 +72,8 @@ def main():
         tf.keras.backend.set_learning_phase(0) # test mode
         for _, mb in tqdm(enumerate(val_ds), desc='steps'):
             x_mb, y_mb = pre_processor.convert2idx(mb)
+            x_mb = pre_processor.pad_sequences(x_mb, 70)
+            x_mb, y_mb = pre_processor.convert_to_tensor(x_mb, y_mb)
             mb_loss = loss_fn(y_mb, model(x_mb))
 
             val_loss_metric.update_state(mb_loss)

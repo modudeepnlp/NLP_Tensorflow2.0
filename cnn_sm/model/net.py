@@ -11,7 +11,7 @@ class SenCNN(tf.keras.Model):
         self._convolution = ConvolutionLayer(300)
         self._pooling = MaxPooling()
         self._dropout = layers.Dropout(0.5)
-        self._fc = layers.Dense(units=num_classes)
+        self._fc = layers.Dense(units=num_classes) # softmax는 여기에서 안 씀
 
     def call(self, x: tf.Tensor) -> tf.Tensor:
         fmap = self._embedding(x)
