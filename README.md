@@ -14,6 +14,7 @@ Most of information is from [NLP paper implementation with PyTorch](https://gith
 | SenCNN           |  92.22%  |     86.81%     |  86.48%  |
 | SenCNN(Ryan)     |  92.53%  |     -     |  82.99%  |
 | SenCNN(SM)       |  92.3%   |     84.98%     |  84.42%  |
+| SenCNN(JMKIM)    |  94.56%  |     86.268%     |  85.851%  |
 | CharCNN          | - | - | - |
 | ConvRec          | - | - | - |
 | VDCNN            | - | - | - |

@@ -32,47 +32,40 @@ def main(argv):
     learning_rate = FLAGS.learning_rate
 
     # create model
-    sen_cnn = SenCNN(vocab=vocab, max_len=max_length, dim=batch_size, classes=classes)
+    sen_cnn = SenCNN(vocab=vocab, classes=classes)
 
     # create optimizer & loss_fn
     opt = tf.optimizers.Adam(learning_rate=learning_rate)
     loss_fn = tf.losses.SparseCategoricalCrossentropy()
 
-    test_loss = 0
-    test_acc = 0
-    test_len = 0
-    tf.keras.backend.set_learning_phase(1)
+    test_loss_metric = tf.keras.metrics.Mean(name='val_loss')
+    test_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='val_accuracy')
+
+    ckpt = tf.train.Checkpoint(step=tf.Variable(1), optimizer=opt, net=sen_cnn)
+    manager = tf.train.CheckpointManager(ckpt, './data_out/tf_ckpts', max_to_keep=3)
+    ckpt.restore(manager.latest_checkpoint)
+
+    if manager.latest_checkpoint:
+        print("Restored from {}".format(manager.latest_checkpoint))
+    else:
+        print("Initializing from scratch.")
+
+    tf.keras.backend.set_learning_phase(0)
+    test_loss_metric.reset_states()
+    test_acc_metric.reset_states()
 
     for step, val in enumerate(test):
         data, label = processing.token2idex(val)
+        logits = sen_cnn(data)
+        val_loss = loss_fn(label, logits)
+        # val_loss += mb_loss.numpy()
+        test_loss_metric.update_state(val_loss)
+        test_acc_metric.update_state(label, logits)
 
-        with tf.GradientTape() as tape:
-            m = sen_cnn(data)
-            mb_loss = loss_fn(label, m)
-        grads = tape.gradient(target=mb_loss, sources=sen_cnn.trainable_variables)
-        opt.apply_gradients(grads_and_vars=zip(grads, sen_cnn.trainable_variables))
-        test_loss += mb_loss.numpy()
+    test_loss = test_loss_metric.result()
 
-        prediction = tf.argmax(m, 1, name="predictions")
-        test_acc += tf.reduce_sum(
-            tf.cast(tf.equal(tf.cast(prediction, tf.int64), tf.cast(label, tf.int64)), tf.int64))
-        test_len += batch_size
-
-    else:
-        test_loss /= (step + 1)
-        test_acc += tf.reduce_sum(
-            tf.cast(tf.equal(tf.cast(prediction, tf.int64), tf.cast(label, tf.int64)), tf.int64))
-        test_len += batch_size
-
-    tf.keras.backend.set_learning_phase(0)
-
-    train_accu = test_acc / test_len * 100
-
-    print("test_acc {}".format(test_acc))
-    print("test_len {}".format(test_len))
-
-    tqdm.write('epoch : {}, test_acc : {:.3f}%, test_loss : {:.3f}'.format(1, train_accu, test_loss))
-
+    tqdm.write(
+        'epoch : {}, tr_acc : {:.3f}%, tr_loss : {:.3f}, '.format(1, test_acc_metric.result() * 100, test_loss))
 
 if __name__ == '__main__':
     app.run(main)
