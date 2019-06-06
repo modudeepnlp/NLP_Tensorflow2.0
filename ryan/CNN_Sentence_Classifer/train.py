@@ -77,8 +77,8 @@ classifier = CNN(max_len, emb_dim, vocab_size)
 # test_loss, test_acc = classifier.evaluate(test_dataset)
 
 opt = tf.optimizers.Adam(learning_rate = lr)
-# loss_fn = tf.keras.metrics.binary_crossentropy
 loss_fn = tf.losses.SparseCategoricalCrossentropy()
+writer = tf.summary.create_file_writer(logdir='./logs')
 
 # metrics
 tr_loss_metric = tf.keras.metrics.Mean(name='train_loss')
@@ -86,12 +86,29 @@ tr_accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accu
 val_loss_metric = tf.keras.metrics.Mean(name='validation_loss')
 val_accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='validation_accuracy')
 
+train_summary_writer = tf.summary.create_file_writer('./logs/train')
+eval_summary_writer = tf.summary.create_file_writer('./logs./eval')
+
+ckpt = tf.train.Checkpoint(step=tf.Variable(1), optimizer=opt, net=classfier)
+manager = tf.train.CheckpointManager(ckpt, './data_out/tf_ckpts', max_to_keep=3)
+ckpt.restore(manager.latest_checkpoint)
+
+if manager.latest_checkpoint:
+	print("Restored from {}".format(manager.latest_checkpoint))
+else:
+	print("Initializing from scratch.")
+
 for epoch in tqdm(range(epochs), desc='epochs'):
 
 	start = time.time()
 
-	tr_loss = 0
+	train_loss_metric.reset_states()
+	train_acc_metric.reset_states()
+	val_loss_metric.reset_states()
+	val_acc_metric.reset_states()
 	tf.keras.backend.set_learning_phase(1)
+
+	tr_loss = 0
 
 	for step, mb in tqdm(enumerate(tr_dataset), desc='steps'):
 		x_mb, y_mb = mb
@@ -111,6 +128,10 @@ for epoch in tqdm(range(epochs), desc='epochs'):
 			template = 'Epoch {} Batch {} Loss {:.4f} Acc {:.4f} Time {:.4f}'
 			print(template.format(epoch + 1, step, tr_mean_loss, tr_mean_accuracy, (time.time() - start)))
 
+			with writer.as_default():
+				tf.summary.scalar('train_loss', train_loss_metric.result(), step=step)
+
+
 		# tf.keras.backend.set_learning_phase(0)
 		#
 		# for _, mb in tqdm(enumerate(val_dataset), desc='steps'):
@@ -126,5 +147,3 @@ for epoch in tqdm(range(epochs), desc='epochs'):
 		# print(val_template.format(val_mean_loss, val_mean_accuracy))
 
 		# tqdm.write('epoch : {}, tr_loss : {:.3f}, val_loss : {:.3f}'.format(epoch + 1, tr_loss))
-
-
