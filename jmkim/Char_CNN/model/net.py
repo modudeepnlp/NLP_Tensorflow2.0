@@ -5,11 +5,10 @@ from configs import FLAGS
 
 
 class CharCNN(tf.keras.Model):
-    def __init__(self, classes, dim):
+    def __init__(self, vocab, classes, dim):
         super(CharCNN, self).__init__()
-        self._conv = ConvolutionLayer(filter=dim)
-        self._classifi = Classifier(classes=classes, dim=dim,dropout=FLAGS.dropout)
-
+        self._conv = ConvolutionLayer(vocab=vocab, filter=dim)
+        self._classifi = Classifier(classes=classes, dim=dim, dropout=FLAGS.dropout)
 
     def call(self, x):
         conv = self._conv(x)

@@ -11,7 +11,6 @@ class Corpus():
         return self._split.sentenceSplit(string)
 
     def transform(self, list_token):
-
         list_to_idx = [self._vocab.to_indices(token) for token in list_token]
         list_to_idx = [self._padding(token) if self._padding else token for token in list_to_idx]
 
@@ -23,7 +22,9 @@ class Corpus():
     def token2idex(self, item):
         data, label = tf.io.decode_csv(item, record_defaults=[[''], [0]], field_delim='\t')
         data = [sen.numpy().decode('utf-8') for sen in data]
-        token_idx = self.split_transform(data)
-        label = tf.convert_to_tensor(label)
-        print(label)
+        data = self.split_transform(data)
+        token_idx = tf.convert_to_tensor(data)
+        #label = [float(v) for v in label]
+        label = tf.reshape(label, (item.get_shape()[0],))
+        #label = tf.convert_to_tensor([float(v) for v in label])
         return token_idx, label

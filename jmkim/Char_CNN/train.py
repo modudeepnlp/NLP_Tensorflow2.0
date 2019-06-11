@@ -26,15 +26,16 @@ def main(argv):
     with open(Path.cwd() / '..' / 'data_in' / 'vocab.pkl', mode='rb') as io:
         vocab = pickle.load(io)
 
-    train = tf.data.TextLineDataset(str(train_data)).shuffle(buffer_size=FLAGS.batch_size).batch(batch_size=FLAGS.batch_size,
-                                                                                     drop_remainder=True)
+    train = tf.data.TextLineDataset(str(train_data)).shuffle(buffer_size=FLAGS.batch_size).batch(
+        batch_size=FLAGS.batch_size,
+        drop_remainder=True)
     eval = tf.data.TextLineDataset(str(val_data)).batch(batch_size=FLAGS.batch_size, drop_remainder=True)
 
     padder = PadSequence(max_length, pad_val=vocab.to_indices(vocab.padding_token))
     processing = Corpus(vocab=vocab, split_fn=Split(), pad_fn=padder)
 
     # create model
-    char_cnn = CharCNN(classes=classes, dim=dim)
+    char_cnn = CharCNN(vocab=vocab, classes=classes, dim=dim)
 
     # create optimizer & loss_fn
     opt = tf.optimizers.Adam(learning_rate=learning_rate)
