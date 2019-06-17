@@ -31,8 +31,8 @@ class ConvolutionLayer(tf.keras.layers.Layer):
         conv = self._kernel_3_conv(conv)
         conv = self._maxpooling(conv)
         print(conv.shape) # [32, 34, 256]
-        # return layers.Flatten(conv)
-        return conv
+        return layers.Flatten()(conv)
+        #return conv
 
 
 class Classifier(tf.keras.layers.Layer):
@@ -43,6 +43,7 @@ class Classifier(tf.keras.layers.Layer):
         self._outDense = tf.keras.layers.Dense(classes)
 
     def call(self, x):
+        print(x.shape) # [32, 8704]
         output = self._dense(x)
         output = self._dropout(output)
         output = self._dense(output)
