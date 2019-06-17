@@ -8,31 +8,29 @@ from configs import FLAGS
 class ConvolutionLayer(tf.keras.layers.Layer):
     def __init__(self, vocab, trainable):
         super(ConvolutionLayer, self).__init__()
-        self._lookup = layers.Embedding(len(vocab), FLAGS.embedding_dim, input_length=FLAGS.length, trainable=trainable)  # [128, 256, 1014]
+        self._lookup = layers.Embedding(len(vocab), FLAGS.embedding_dim, input_length=FLAGS.length)  # [128, 256, 1014]
         # Conv1D
         self._kernel_7_conv = layers.Conv1D(filters=FLAGS.embedding_dim, activation=tf.nn.relu, kernel_size=7)
         self._kernel_3_conv = layers.Conv1D(filters=FLAGS.embedding_dim, activation=tf.nn.relu, kernel_size=3)
-        self._maxpooling = layers.GlobalMaxPool1D()
+        self._maxpooling = layers.MaxPool1D(pool_size=3, strides=3)
 
     def call(self, x):
-        #print(x.shape)  # [128, 1014]
+        print(x.shape)  # [32, 1014]
         lookup = self._lookup(x)
-        #print(lookup.shape)  # [128,1014, 256]
+        print(lookup.shape)  # [32, 1014, 256]
         conv = self._kernel_7_conv(lookup)
-        #print(conv.shape)  # [128, 1008, 256]
+        print(conv.shape)  # [32, 1008, 256]
         conv = self._maxpooling(conv)
-        #print(conv.shape)  # [128, 256]
-        conv = self._lookup(conv)
+        print(conv.shape)  # [32, 336, 256]
         conv = self._kernel_7_conv(conv)
         conv = self._maxpooling(conv)
-        #print(conv.shape)
-        conv = self._lookup(conv)
+        print(conv.shape) # [32, 110, 256]
         conv = self._kernel_3_conv(conv)
         conv = self._kernel_3_conv(conv)
         conv = self._kernel_3_conv(conv)
         conv = self._kernel_3_conv(conv)
         conv = self._maxpooling(conv)
-        #print(conv.shape)
+        print(conv.shape) # [32, 34, 256]
         # return layers.Flatten(conv)
         return conv
 
