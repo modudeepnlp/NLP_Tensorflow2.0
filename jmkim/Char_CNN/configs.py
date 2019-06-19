@@ -20,9 +20,9 @@ FLAGS = flags.FLAGS
 # flags.DEFINE_string('vocab', 'vocab.pkl', 'vocab data')
 
 flags.DEFINE_integer('classes', 2, 'classes')
-flags.DEFINE_integer('length', 1014, 'max length')
+flags.DEFINE_integer('length', 300, 'max length')
 flags.DEFINE_integer('epochs', 1, 'epochs')
 flags.DEFINE_integer('batch_size', 32, 'batch size')
 flags.DEFINE_float('learning_rate', 1e-3, 'learning rate')
 flags.DEFINE_float('dropout', 0.5, 'dropout')
-flags.DEFINE_integer('embedding_dim', 256, 'embedding dim')
+flags.DEFINE_integer('embedding_dim', 8, 'embedding dim')
