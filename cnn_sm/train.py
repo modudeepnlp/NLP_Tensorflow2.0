@@ -50,7 +50,7 @@ def main():
     # training
 
     for epoch in tqdm(range(epochs), desc='epochs'):
-        # tr_loss
+        # trining data
         tf.keras.backend.set_learning_phase(1) # train mode
 
         for _, mb in tqdm(enumerate(tr_ds), desc='steps'):
@@ -69,6 +69,7 @@ def main():
         tr_mean_loss = tr_loss_metric.result()
         tr_mean_accuracy = tr_accuracy_metric.result()
 
+        # test data
         tf.keras.backend.set_learning_phase(0) # test mode
         for _, mb in tqdm(enumerate(val_ds), desc='steps'):
             x_mb, y_mb = pre_processor.convert2idx(mb)
@@ -91,5 +92,4 @@ def main():
 
 
 if __name__ == "__main__":
-    #app.run(main)
     fire.Fire(main)
